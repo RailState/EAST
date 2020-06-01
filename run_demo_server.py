@@ -39,7 +39,7 @@ def get_predictor(checkpoint_path):
     import model
     from icdar import restore_rectangle
     import lanms
-    from eval import resize_image, sort_poly, detect
+    from scene_ocr import resize_image, sort_poly, detect
 
     input_images = tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input_images')
     global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
@@ -199,7 +199,14 @@ def index_post():
     global predictor
     import io
     bio = io.BytesIO()
-    request.files['image'].save(bio)
+    
+    # XXX https://github.com/pallets/werkzeug/issues/1733
+    # request.files['image'].save(bio)
+
+    from shutil import copyfileobj
+    copyfileobj(request.files['image'].stream, bio, 16384)
+
+
     img = cv2.imdecode(np.frombuffer(bio.getvalue(), dtype='uint8'), 1)
     rst = get_predictor(checkpoint_path)(img)
 

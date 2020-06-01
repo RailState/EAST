@@ -12,7 +12,7 @@ from shapely.geometry import Polygon
 
 import tensorflow as tf
 
-from data_util import GeneratorEnqueuer
+from .data_util import GeneratorEnqueuer
 
 tf.app.flags.DEFINE_string('training_data_path', '/data/ocr/icdar2015/',
                            'training dataset to use')
@@ -719,11 +719,12 @@ def generator(input_size=512, batch_size=32,
                 continue
 
 
-def get_batch(num_workers, **kwargs):
+def get_batch(num_workers, max_queue_size=2, **kwargs):
     try:
-        enqueuer = GeneratorEnqueuer(generator(**kwargs), use_multiprocessing=True)
-        print('Generator use 10 batches for buffering, this may take a while, you can tune this yourself.')
-        enqueuer.start(max_queue_size=10, workers=num_workers)
+        enqueuer = GeneratorEnqueuer(generator(**kwargs), use_multiprocessing=False)
+        #enqueuer = GeneratorEnqueuer(generator(**kwargs), use_multiprocessing=True)
+        print(f'Generator use {max_queue_size} batches for buffering and {num_workers} workers, this may take a while, you can tune this yourself.')
+        enqueuer.start(max_queue_size=max_queue_size, workers=num_workers)
         generator_output = None
         while True:
             while enqueuer.is_running():
