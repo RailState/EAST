@@ -5,19 +5,19 @@ import os
 import numpy as np
 import tensorflow as tf
 
-import locality_aware_nms as nms_locality
-import lanms
+# import locality_aware_nms as nms_locality
 
-tf.app.flags.DEFINE_string('test_data_path', '/tmp/ch4_test_images/images/', '')
-tf.app.flags.DEFINE_string('gpu_list', '0', '')
-tf.app.flags.DEFINE_string('checkpoint_path', '/tmp/east_icdar2015_resnet_v1_50_rbox/', '')
-tf.app.flags.DEFINE_string('output_dir', '/tmp/ch4_test_images/images/', '')
-tf.app.flags.DEFINE_bool('no_write_images', False, 'do not write images')
+tf.compat.v1.flags.DEFINE_string('test_data_path', '/tmp/ch4_test_images/images/', '')
+tf.compat.v1.flags.DEFINE_string('gpu_list', '0', '')
+tf.compat.v1.flags.DEFINE_string('checkpoint_path', '/tmp/east_icdar2015_resnet_v1_50_rbox/', '')
+tf.compat.v1.flags.DEFINE_string('output_dir', '/tmp/ch4_test_images/images/', '')
+tf.compat.v1.flags.DEFINE_bool('no_write_images', False, 'do not write images')
 
-import model
-from icdar import restore_rectangle
+from . import lanms
+from .model import model
+from .icdar import restore_rectangle
 
-FLAGS = tf.app.flags.FLAGS
+FLAGS = tf.compat.v1.flags.FLAGS
 
 def get_images():
     '''
@@ -133,16 +133,16 @@ def main(argv=None):
         if e.errno != 17:
             raise
 
-    with tf.get_default_graph().as_default():
-        input_images = tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input_images')
-        global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
+    with tf.compat.v1.get_default_graph().as_default():
+        input_images = tf.compat.v1.placeholder(tf.float32, shape=[None, None, None, 3], name='input_images')
+        global_step = tf.compat.v1.get_variable('global_step', [], initializer=tf.compat.v1.constant_initializer(0), trainable=False)
 
         f_score, f_geometry = model.model(input_images, is_training=False)
 
         variable_averages = tf.train.ExponentialMovingAverage(0.997, global_step)
-        saver = tf.train.Saver(variable_averages.variables_to_restore())
+        saver = tf.compat.v1.train.Saver(variable_averages.variables_to_restore())
 
-        with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
+        with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(allow_soft_placement=True)) as sess:
             ckpt_state = tf.train.get_checkpoint_state(FLAGS.checkpoint_path)
             model_path = os.path.join(FLAGS.checkpoint_path, os.path.basename(ckpt_state.model_checkpoint_path))
             print('Restore from {}'.format(model_path))
@@ -193,4 +193,4 @@ def main(argv=None):
                     cv2.imwrite(img_path, im[:, :, ::-1])
 
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()

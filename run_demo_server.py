@@ -41,15 +41,15 @@ def get_predictor(checkpoint_path):
     import lanms
     from eval import resize_image, sort_poly, detect
 
-    input_images = tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input_images')
-    global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
+    input_images = tf.compat.v1.placeholder(tf.float32, shape=[None, None, None, 3], name='input_images')
+    global_step = tf.compat.v1.get_variable('global_step', [], initializer=tf.compat.v1.constant_initializer(0), trainable=False)
 
     f_score, f_geometry = model.model(input_images, is_training=False)
 
     variable_averages = tf.train.ExponentialMovingAverage(0.997, global_step)
-    saver = tf.train.Saver(variable_averages.variables_to_restore())
+    saver = tf.compat.v1.train.Saver(variable_averages.variables_to_restore())
 
-    sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+    sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(allow_soft_placement=True))
 
     ckpt_state = tf.train.get_checkpoint_state(checkpoint_path)
     model_path = os.path.join(checkpoint_path, os.path.basename(ckpt_state.model_checkpoint_path))
